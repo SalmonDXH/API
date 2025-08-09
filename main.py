@@ -54,8 +54,8 @@ def gethwid(hwid: str):
         except:
             continue
     found = hwid in hwids
-        
-    return  {"result": found}
+    a = "1" if found else "0"
+    return  {"result": a}
 
 
 @app.get("/normal/{hwid}")
@@ -70,6 +70,7 @@ def gethwid(hwid: str):
         except:
             continue
     found = hwid in hwids
+    a = "1" if found else "0"
         
-    return  {"result": found}
+    return  {"result": a}
 
