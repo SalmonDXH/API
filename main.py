@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 import requests
 import os
-from flask.config import T
 from dotenv import get_key, load_dotenv
 import base64
-import webserver
+from fastapi import FastAPI, Request
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
 
 load_dotenv()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") 
@@ -38,12 +41,19 @@ class Github:
 
 app = FastAPI()
 
+limiter = Limiter(key_func=get_remote_address, default_limits=["1/minute"])
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
 @app.get("/")
-def read_root():
+@limiter.limit("1/minute")
+def read_root(request: Request):  # <- add this
     return {"message": "Hello World"}
 
 @app.get("/orca/{hwid}")
-def gethwid_orca(hwid: str):
+@limiter.limit("10/minute")
+def gethwid_orca(hwid: str,request: Request):
     git = Github(GITHUB_TOKEN,GITHUB_USERNAME,GITHUB_REPO)
     content = decode_content(git.getData("advancehwid"))
     splitted_line = content.split("\n")
@@ -55,14 +65,14 @@ def gethwid_orca(hwid: str):
             continue
     found = hwid in hwids
     
-    # Corrected logic to encode the result
     result_string = "1" if found else "0"
     encoded_result = base64.b64encode(result_string.encode("utf-8")).decode("utf-8")
     
     return {"result": encoded_result}
 
 @app.get("/normal/{hwid}")
-def gethwid_normal(hwid: str):
+@limiter.limit("10/minute")
+def gethwid_normal(hwid: str,request: Request):
     git = Github(GITHUB_TOKEN,GITHUB_USERNAME,GITHUB_REPO)
     content = decode_content(git.getData("hwid"))
     splitted_line = content.split("\n")
@@ -74,7 +84,6 @@ def gethwid_normal(hwid: str):
             continue
     found = hwid in hwids
     
-    # Corrected logic to encode the result
     result_string = "1" if found else "0"
     encoded_result = base64.b64encode(result_string.encode("utf-8")).decode("utf-8")
     
