@@ -7,7 +7,7 @@ import base64
 import webserver
 
 load_dotenv()
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # environment variable name
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") 
 GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
 GITHUB_REPO = os.getenv("GITHUB_REPO")
 
@@ -43,7 +43,7 @@ def read_root():
     return {"message": "Hello World"}
 
 @app.get("/orca/{hwid}")
-def gethwid(hwid: str):
+def gethwid_orca(hwid: str):
     git = Github(GITHUB_TOKEN,GITHUB_USERNAME,GITHUB_REPO)
     content = decode_content(git.getData("advancehwid"))
     splitted_line = content.split("\n")
@@ -54,12 +54,15 @@ def gethwid(hwid: str):
         except:
             continue
     found = hwid in hwids
-    a = "1" if found else "0"
-    return  {"result": a}
-
+    
+    # Corrected logic to encode the result
+    result_string = "1" if found else "0"
+    encoded_result = base64.b64encode(result_string.encode("utf-8")).decode("utf-8")
+    
+    return {"result": encoded_result}
 
 @app.get("/normal/{hwid}")
-def gethwid(hwid: str):
+def gethwid_normal(hwid: str):
     git = Github(GITHUB_TOKEN,GITHUB_USERNAME,GITHUB_REPO)
     content = decode_content(git.getData("hwid"))
     splitted_line = content.split("\n")
@@ -70,7 +73,9 @@ def gethwid(hwid: str):
         except:
             continue
     found = hwid in hwids
-    a = "1" if found else "0"
-        
-    return  {"result": a}
-
+    
+    # Corrected logic to encode the result
+    result_string = "1" if found else "0"
+    encoded_result = base64.b64encode(result_string.encode("utf-8")).decode("utf-8")
+    
+    return {"result": encoded_result}
