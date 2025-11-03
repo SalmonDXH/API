@@ -66,6 +66,7 @@ def gethwid_tester(hwid: str,request: Request):
     return {"result": encoded_result}
 
 
+
 @app.get('/v2/orca')
 @limiter.limit('10/minute')
 async def v2_orca(request: Request):
@@ -99,6 +100,16 @@ async def v2_tester(request: Request):
     except Exception as e:
         return {'result': 'Fail'}
 
+@app.get('/v2/premium')
+@limiter.limit('10/minute')
+async def v2_tester(request: Request):
+    try:
+        data = await request.json()
+        hwid = data['hwid']
+        user_data = (supabase.table("premium").select("username", "role").eq("hwid", hwid).execute()).data[0]
+        return {'result': 'True', 'role': user_data['role'], 'username':user_data['username']}
+    except Exception as e:
+        return {'result': 'Fail'}
 
 @app.get('/v2/state')
 @limiter.limit('10/minute')
