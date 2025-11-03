@@ -102,14 +102,15 @@ async def v2_tester(request: Request):
 
 @app.get('/v2/premium')
 @limiter.limit('10/minute')
-async def v2_tester(request: Request):
+async def v2_premium(request: Request):
     try:
         data = await request.json()
         hwid = data['hwid']
-        user_data = (supabase.table("premium").select("username", "role").eq("hwid", hwid).execute()).data[0]
+        user_data = (supabase.table("Premium").select("username", "role").eq("hwid", hwid).execute()).data[0]
+        print(user_data)
         return {'result': 'True', 'role': user_data['role'], 'username':user_data['username']}
     except Exception as e:
-        return {'result': 'Fail'}
+        return {'result': 'Fail', "message": str(e)}
 
 @app.get('/v2/state')
 @limiter.limit('10/minute')
