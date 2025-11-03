@@ -119,4 +119,4 @@ async def v2_state(request: Request):
         res = (supabase.table("State").select("type").eq("id", 1).execute()).data[0]['type']
         return {'result': res}
     except Exception as e:
-        return {'result': 'Error', 'message' : str(e)}
+        return {'result': 'Error'}
