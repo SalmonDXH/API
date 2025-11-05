@@ -107,8 +107,10 @@ async def v2_premium(request: Request):
         data = await request.json()
         hwid = data['hwid']
         user_data = (supabase.table("Premium").select("username", "role").eq("hwid", hwid).execute()).data[0]
+        result = supabase.rpc('increment_login', {'user_id': 1}).execute()
         return {'result': 'True', 'role': user_data['role'], 'username':user_data['username']}
     except Exception as e:
+        print(str(e))
         return {'result': 'Fail'}
 
 @app.get('/v2/state')
