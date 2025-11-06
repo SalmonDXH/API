@@ -113,6 +113,19 @@ async def v2_premium(request: Request):
         print(str(e))
         return {'result': 'Fail'}
 
+@app.get('/v2/check')
+@limiter.limit('10/minute')
+async def v2_premium(request: Request):
+    try:
+        data = await request.json()
+        hwid = data['hwid']
+        user_data =  (supabase.rpc('check_key', {'p_hwid': hwid}).execute()).dict()['data'][0]
+        return user_data
+    except Exception as e:
+        print(str(e))
+        return {'result': 'Fail'}
+
+
 @app.get('/v2/state')
 @limiter.limit('5/minute')
 async def v2_state(request: Request):
