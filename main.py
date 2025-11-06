@@ -114,7 +114,7 @@ async def v2_premium(request: Request):
         return {'result': 'Fail'}
 
 @app.get('/v2/state')
-@limiter.limit('10/minute')
+@limiter.limit('5/minute')
 async def v2_state(request: Request):
     try:
         res = (supabase.table("State").select("type").eq("id", 1).execute()).data[0]['type']
@@ -123,7 +123,7 @@ async def v2_state(request: Request):
         return {'result': 'Error'}
 
 @app.get('/api/statistic')
-@limiter.limit('10/minute')
+@limiter.limit('5/minute')
 async def api_statistic(request: Request):
     try:
         result = (supabase.rpc('macro_statistic', {}).execute()).dict()['data'][0]
