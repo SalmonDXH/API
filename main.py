@@ -149,6 +149,7 @@ async def v2_state(request: Request):
         return {'result': 'Error'}
 
 @app.get('/api/statistic')
+@limiter.limit('10/minute')
 async def api_statistic(request: Request, verified:bool = Depends(verify_origin)):
     try:
         result = (supabase.rpc('macro_statistic', {}).execute()).dict()['data'][0]
