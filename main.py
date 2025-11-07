@@ -127,7 +127,7 @@ async def v2_premium(request: Request):
 
 @app.get('/v2/check')
 @limiter.limit('10/minute')
-async def v2_premium(request: Request):
+async def v2_check(request: Request):
     try:
         data = await request.json()
         hwid = data['hwid']
@@ -136,7 +136,13 @@ async def v2_premium(request: Request):
         return user_data
     except Exception as e:
         print(str(e))
-        return {'result': 'Fail'}
+        state = 'Tester'
+        try:
+            state=(supabase.table("State").select("type").eq("id", 1).execute()).data[0]['type']
+        except:
+            pass
+        
+        return {'username': '', 'role': 'Free', 'state': state}
 
 
 @app.get('/v2/state')
