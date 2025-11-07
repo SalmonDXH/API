@@ -3,8 +3,6 @@ import os
 from dotenv import load_dotenv
 import base64
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from supabase import create_client, Client
@@ -15,8 +13,6 @@ load_dotenv()
 supaurl: str = os.environ.get("supaurl")
 supakey: str = os.environ.get("supakey")
 supabase: Client = create_client(supaurl, supakey)
-
-website: str = os.environ.get("website")
 
 
 app = FastAPI()
@@ -140,23 +136,11 @@ async def v2_state(request: Request):
     except Exception as e:
         return {'result': 'Error'}
 
-
-secure_app = FastAPI()
-secure_app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[website], # ONLY your website is allowed
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@secure_app.get('/statistic')
-async def api_statistic():
+@app.get('/api/statistic')
+@limiter.limit('10/minute')
+async def api_statistic(request: Request):
     try:
         result = (supabase.rpc('macro_statistic', {}).execute()).dict()['data'][0]
         return result
     except:
         raise HTTPException(status_code=400, detail="Something went wrong")
-
-
-app.mount('/api',secure_app)
