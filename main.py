@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import os
 from dotenv import load_dotenv
 import base64
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from supabase import create_client, Client
@@ -13,6 +13,7 @@ load_dotenv()
 supaurl: str = os.environ.get("supaurl")
 supakey: str = os.environ.get("supakey")
 supabase: Client = create_client(supaurl, supakey)
+website : str = os.environ.get('website')
 
 
 app = FastAPI()
@@ -20,6 +21,17 @@ app = FastAPI()
 limiter = Limiter(key_func=get_remote_address, default_limits=["1/minute"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+async def verify_origin(request: Request):
+    origin  = request.headers.get("origin")
+    referer = request.headers.get("referer")
+    if origin and origin != website:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if referer and not referer.startswith(website):
+        raise HTTPException(status_code=403, detail="Forbidden")
+    if not origin and not referer:
+         raise HTTPException(status_code=403, detail="Forbidden")
+    return True
 
 @app.get("/")
 @limiter.limit("1/minute")
@@ -137,8 +149,7 @@ async def v2_state(request: Request):
         return {'result': 'Error'}
 
 @app.get('/api/statistic')
-@limiter.limit('10/minute')
-async def api_statistic(request: Request):
+async def api_statistic(request: Request, verified:bool = Depends(verify_origin)):
     try:
         result = (supabase.rpc('macro_statistic', {}).execute()).dict()['data'][0]
         return result
