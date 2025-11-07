@@ -120,6 +120,7 @@ async def v2_premium(request: Request):
         data = await request.json()
         hwid = data['hwid']
         user_data =  (supabase.rpc('check_key', {'p_hwid': hwid}).execute()).dict()['data'][0]
+        supabase.rpc('increment_login', {'user_id': 1}).execute()
         return user_data
     except Exception as e:
         print(str(e))
