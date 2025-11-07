@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 import os
 from dotenv import load_dotenv
-import base64
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from supabase import create_client, Client
@@ -38,79 +37,6 @@ async def verify_origin(request: Request):
 def read_root(request: Request):  
     return {"message": "Hello World"}
 
-@app.get("/orca/{hwid}")
-@limiter.limit("10/minute")
-def gethwid_orca(hwid: str,request: Request):
-    result_string = "0"
-    try:
-        user_data = (supabase.table("Orca").select("username").eq("hwid", hwid).execute()).data[0]
-        result_string = "1"
-    except:
-        result_string = "0"
-    encoded_result = base64.b64encode(result_string.encode("utf-8")).decode("utf-8")
-    
-    return {"result": encoded_result}
-
-@app.get("/normal/{hwid}")
-@limiter.limit("10/minute")
-def gethwid_normal(hwid: str,request: Request):
-    result_string = "0"
-    try:
-        user_data = (supabase.table("Donator").select("username").eq("hwid", hwid).execute()).data[0]
-        result_string = "1"
-    except:
-        result_string = "0"
-    encoded_result = base64.b64encode(result_string.encode("utf-8")).decode("utf-8")
-    
-    return {"result": encoded_result}
-
-@app.get("/tester/{hwid}")
-@limiter.limit("10/minute")
-def gethwid_tester(hwid: str,request: Request):
-    result_string = "0"
-    try:
-        user_data = (supabase.table("Tester").select("username").eq("hwid", hwid).execute()).data[0]
-        result_string = "1"
-    except:
-        result_string = "0"
-    encoded_result = base64.b64encode(result_string.encode("utf-8")).decode("utf-8")
-    
-    return {"result": encoded_result}
-
-
-
-@app.get('/v2/orca')
-@limiter.limit('10/minute')
-async def v2_orca(request: Request):
-    try:
-        data = await request.json()
-        hwid = data['hwid']
-        (supabase.table("Orca").select("username").eq("hwid", hwid).execute()).data[0]
-        return {'result': 'True'}
-    except Exception as e:
-        return {'result': 'Fail'}
-
-@app.get('/v2/donator')
-@limiter.limit('10/minute')
-async def v2_donator(request: Request):
-    try:
-        data = await request.json()
-        hwid = data['hwid']
-        (supabase.table("Donator").select("username").eq("hwid", hwid).execute()).data[0]
-        return {'result': 'True'}
-    except Exception as e:
-        return {'result': 'Fail'}
-
-@app.get('/v2/tester')
-@limiter.limit('10/minute')
-async def v2_tester(request: Request):
-    try:
-        data = await request.json()
-        hwid = data['hwid']
-        (supabase.table("Tester").select("username").eq("hwid", hwid).execute()).data[0]
-        return {'result': 'True'}
-    except Exception as e:
-        return {'result': 'Fail'}
 
 @app.get('/v2/premium')
 @limiter.limit('10/minute')
@@ -119,11 +45,9 @@ async def v2_premium(request: Request):
         data = await request.json()
         hwid = data['hwid']
         user_data = (supabase.table("Premium").select("username", "role").eq("hwid", hwid).execute()).data[0]
-        result = supabase.rpc('increment_login', {'user_id': 1}).execute()
         return {'result': 'True', 'role': user_data['role'], 'username':user_data['username']}
     except Exception as e:
-        print(str(e))
-        return {'result': 'Fail'}
+        raise HTTPException(status_code=400, detail="You are not registed")
 
 @app.get('/v2/check')
 @limiter.limit('10/minute')
@@ -136,7 +60,6 @@ async def v2_check(request: Request):
     except Exception as e:
         print(str(e))
         state = 'Tester'
-
         return {'username': '', 'role': 'Free', 'state': state}
 
 
@@ -147,5 +70,5 @@ async def v2_state(request: Request):
         res = (supabase.table("State").select("type").eq("id", 1).execute()).data[0]['type']
         return {'result': res}
     except Exception as e:
-        return {'result': 'Error'}
+        raise HTTPException(status_code=404, detail="Item not found")
 
