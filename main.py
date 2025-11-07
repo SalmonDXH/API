@@ -131,7 +131,7 @@ async def v2_check(request: Request):
     try:
         data = await request.json()
         hwid = data['hwid']
-        user_data =  (supabase.rpc('check_key', {'p_hwid': hwid}).execute()).dict()['data'][0]
+        user_data =  (supabase.rpc('check_key_2', {'p_hwid': hwid}).execute()).dict()['data'][0]
         supabase.rpc('increment_login', {'user_id': 1}).execute()
         return user_data
     except Exception as e:
