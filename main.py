@@ -132,16 +132,11 @@ async def v2_check(request: Request):
         data = await request.json()
         hwid = data['hwid']
         user_data =  (supabase.rpc('check_key_2', {'p_hwid': hwid}).execute()).dict()['data'][0]
-        supabase.rpc('increment_login', {'user_id': 1}).execute()
         return user_data
     except Exception as e:
         print(str(e))
         state = 'Tester'
-        try:
-            state=(supabase.table("State").select("type").eq("id", 1).execute()).data[0]['type']
-        except:
-            pass
-        
+
         return {'username': '', 'role': 'Free', 'state': state}
 
 
@@ -154,11 +149,3 @@ async def v2_state(request: Request):
     except Exception as e:
         return {'result': 'Error'}
 
-@app.get('/api/statistic')
-@limiter.limit('10/minute')
-async def api_statistic(request: Request, verified:bool = Depends(verify_origin)):
-    try:
-        result = (supabase.rpc('macro_statistic', {}).execute()).dict()['data'][0]
-        return result
-    except:
-        raise HTTPException(status_code=400, detail="Something went wrong")
