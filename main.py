@@ -63,6 +63,22 @@ async def v2_check(request: Request):
         return {'username': '', 'role': 'Free', 'state': state}
 
 
+
+@app.get('/v2/check_2')
+@limiter.limit('10/minute')
+async def v2_check(request: Request):
+    try:
+        data = await request.json()
+        hwid = data['hwid']
+        userid = data['userid']
+        user_data =  (supabase.rpc('check_key_3', {'p_hwid': hwid, 'p_userid': userid}).execute()).dict()['data'][0]
+        return user_data
+    except Exception as e:
+        print(str(e))
+        state = 'Tester'
+        return {'username': '', 'role': 'Free', 'state': state}
+
+
 @app.get('/v2/state')
 @limiter.limit('5/minute')
 async def v2_state(request: Request):
