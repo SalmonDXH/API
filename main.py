@@ -38,33 +38,8 @@ def read_root(request: Request):
     return {"message": "Hello World"}
 
 
-@app.get('/v2/premium')
-@limiter.limit('10/minute')
-async def v2_premium(request: Request):
-    try:
-        data = await request.json()
-        hwid = data['hwid']
-        user_data = (supabase.table("Premium").select("username", "role").eq("hwid", hwid).execute()).data[0]
-        return {'result': 'True', 'role': user_data['role'], 'username':user_data['username']}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail="You are not registed")
 
 @app.get('/v2/check')
-@limiter.limit('10/minute')
-async def v2_check(request: Request):
-    try:
-        data = await request.json()
-        hwid = data['hwid']
-        user_data =  (supabase.rpc('check_key_2', {'p_hwid': hwid}).execute()).dict()['data'][0]
-        return user_data
-    except Exception as e:
-        print(str(e))
-        state = 'Tester'
-        return {'username': '', 'role': 'Free', 'state': state}
-
-
-
-@app.get('/v2/check_2')
 @limiter.limit('10/minute')
 async def v2_check(request: Request):
     try:
