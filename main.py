@@ -16,7 +16,13 @@ supabase: Client = create_client(supaurl, supakey)
 website : str = os.environ.get('website')
 
 
-app = FastAPI()
+
+app = FastAPI(
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None
+)
+
 
 CURRENT_MACRO_ROLE = "Tester"
 
@@ -68,6 +74,7 @@ async def v25_check(request:Request):
                     }
                 )
             else:
+                user_data["status_code"] = 200
                 return user_data
         return JSONResponse(
             status_code=400,
