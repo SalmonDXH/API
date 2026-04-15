@@ -62,7 +62,7 @@ async def v25_check(request:Request):
                     status_code=404,
                     content={
                         "status":0,
-                        "message": f"user with id {data.get("userid")} and hwid '{data.get("hwid")}' has not registered yet",
+                        "message": f"user @{data.get("userid")} has not registered yet",
                         "state": CURRENT_MACRO_ROLE
                     }
                 )
