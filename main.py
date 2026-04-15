@@ -55,15 +55,16 @@ async def v25_check(request:Request):
     try:
         data = await request.json()
         if "hwid" in data and "userid" in data:
-            user_data = (supabase.rpc('check_key_3', {'p_hwid': data.get("hwid"), 'p_userid': data.get("userid")}).execute()).dict()['data'][0]
+            user_data = (supabase.rpc('check_macro_key', {'p_hwid': data.get("hwid"), 'p_userid': data.get("userid")}).execute()).dict()['data'][0]
             CURRENT_MACRO_ROLE = user_data.get("state","Tester")
             if user_data.get("role","") == "Free" and user_data.get("username") == "":
                 return JSONResponse(
                     status_code=404,
                     content={
                         "status":0,
-                        "message": f"user @{data.get("userid")} has not registered yet",
-                        "state": CURRENT_MACRO_ROLE
+                        "message": user_data.get("message", ""),
+                        "state": CURRENT_MACRO_ROLE,
+                        "status_code": 404
                     }
                 )
             else:
@@ -73,7 +74,8 @@ async def v25_check(request:Request):
             content={
                 "status": 0,
                 "message": "Missing required content",
-                "state": CURRENT_MACRO_ROLE
+                "state": CURRENT_MACRO_ROLE,
+                "status_code": 400
             }
         )
     except Exception as e:
@@ -83,7 +85,8 @@ async def v25_check(request:Request):
             content={
                 "status": 0,
                 "message": "Server failed to get user detail",
-                "state": CURRENT_MACRO_ROLE
+                "state": CURRENT_MACRO_ROLE,
+                "status_code": 500
             }
         )
 
