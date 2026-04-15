@@ -2,6 +2,7 @@ from fastapi import FastAPI
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import RedirectResponse, JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from supabase import create_client, Client
@@ -16,6 +17,8 @@ website : str = os.environ.get('website')
 
 
 app = FastAPI()
+
+CURRENT_MACRO_ROLE = "Tester"
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["1/minute"])
 app.state.limiter = limiter
@@ -35,9 +38,51 @@ async def verify_origin(request: Request):
 @app.get("/")
 @limiter.limit("1/minute")
 def read_root(request: Request):  
-    return {"message": "Hello World"}
+    return RedirectResponse(url="https://discord.gg/salmon")
 
 
+"""
+{
+    "role": str,
+    "state": str,
+    "username": str,
+}
+"""
+@app.get("/v2/macro")
+@limiter.limit('10/minute')
+async def v25_check(request:Request):
+    try:
+        data = await request.json()
+        if "hwid" in data and "userid" in data:
+            user_data = (supabase.rpc('check_key_3', {'p_hwid': data.get("hwid"), 'p_userid': data.get("userid")}).execute()).dict()['data']
+            if len(user_data) > 0:
+                CURRENT_MACRO_ROLE = user_data[0].get("state","Tester")
+                return user_data[0]
+            else:
+                return JSONResponse(
+                    status_code=401,
+                    content={
+                        "status":0,
+                        "message": "User has not registered yet"
+                    }
+                )
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": 0,
+                "message": "Missing required content"
+            }
+        )
+    except Exception as e:
+        print(str(e))
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": 0,
+                "message": "Server failed to get user detail",
+                "state": CURRENT_MACRO_ROLE
+            }
+        )
 
 @app.get('/v2/check')
 @limiter.limit('10/minute')
