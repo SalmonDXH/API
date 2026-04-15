@@ -95,7 +95,7 @@ async def v2_check(request: Request):
         return user_data
     except Exception as e:
         print(str(e))
-        state = 'Tester'
+        state = 'Free'
         return {'username': '', 'role': 'Free', 'state': state}
 
 
