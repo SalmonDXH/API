@@ -20,6 +20,7 @@ app = FastAPI()
 
 CURRENT_MACRO_ROLE = "Tester"
 
+
 limiter = Limiter(key_func=get_remote_address, default_limits=["1/minute"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -54,23 +55,25 @@ async def v25_check(request:Request):
     try:
         data = await request.json()
         if "hwid" in data and "userid" in data:
-            user_data = (supabase.rpc('check_key_3', {'p_hwid': data.get("hwid"), 'p_userid': data.get("userid")}).execute()).dict()['data']
-            if len(user_data) > 0:
-                CURRENT_MACRO_ROLE = user_data[0].get("state","Tester")
-                return user_data[0]
-            else:
+            user_data = (supabase.rpc('check_key_3', {'p_hwid': data.get("hwid"), 'p_userid': data.get("userid")}).execute()).dict()['data'][0]
+            CURRENT_MACRO_ROLE = user_data.get("state","Tester")
+            if user_data.get("role","") == "Free" and user_data.get("username") == "":
                 return JSONResponse(
-                    status_code=401,
+                    status_code=404,
                     content={
                         "status":0,
-                        "message": "User has not registered yet"
+                        "message": f"user with id {data.get("userid")} and hwid '{data.get("hwid")}' has not registered yet",
+                        "state": CURRENT_MACRO_ROLE
                     }
                 )
+            else:
+                return user_data
         return JSONResponse(
             status_code=400,
             content={
                 "status": 0,
-                "message": "Missing required content"
+                "message": "Missing required content",
+                "state": CURRENT_MACRO_ROLE
             }
         )
     except Exception as e:
@@ -95,8 +98,7 @@ async def v2_check(request: Request):
         return user_data
     except Exception as e:
         print(str(e))
-        state = 'Free'
-        return {'username': '', 'role': 'Free', 'state': state}
+        return {'username': '', 'role': 'Free', 'state': CURRENT_MACRO_ROLE}
 
 
 @app.get('/v2/state')
